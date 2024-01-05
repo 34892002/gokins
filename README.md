@@ -119,3 +119,20 @@ stages:
 
 ![](https://static01.imgkr.com/temp/681c8ea0a7dc45bcb9fe14234c5761be.png)
 
+## 编译
+```
+# 安装依赖
+go mod download
+
+# window环境编译可执行文件
+$env:CGO_ENABLED="0"
+$env:GOOS=" windows"
+$env:GOARCH="amd64"
+go build -o gokins.exe main.go
+
+# window10环境编译Linux可执行文件
+$env:CGO_ENABLED="0"
+$env:GOOS="linux"
+$env:GOARCH="amd64"
+go build -o gokins main.go
+```
