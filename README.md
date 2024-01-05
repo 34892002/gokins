@@ -119,6 +119,20 @@ stages:
 
 ![](https://static01.imgkr.com/temp/681c8ea0a7dc45bcb9fe14234c5761be.png)
 
+# 非官方补充说明
+> 以下内容、脚本、镜像、可执行文件均为个人修改发布，使用自由、风险自担。
+## docker部署
+```
+docker run -d -p 8030:8030 -p 8031:8031 -v /usr/data/gokins:/root/.gokins liohao/my-gokins:latest
+
+docker run -d --name gokinsr-node \
+    -e GOKINS_SERVHOST=172.17.0.1:8031 \
+    -e GOKINS_SERVSECRET=maoguorui666 \
+    -e GOKINS_PLUGIN=build@node \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    --entrypoint ./gokinsr-alpine \
+    liohao/my-gokinsr:latest
+```
 ## 编译
 ```
 # 安装依赖
@@ -135,4 +149,33 @@ $env:CGO_ENABLED="0"
 $env:GOOS="linux"
 $env:GOARCH="amd64"
 go build -o gokins main.go
+```
+## 流水线配置示例
+> 使用仓库内Dockerfile文件部署到docker，请自行了解Dockerfile
+```yml
+version: 1.0
+vars:
+  projectName: v3temp
+  port: 2360
+stages:
+  - stage:
+    displayName: build
+    name: build
+    steps:
+      - step: shell@sh
+        displayName: npm-build-1
+        name: build
+        env:
+        commands:
+          - echo Hello World
+      - step: build@node
+        displayName: npm-build-2
+        name: publish
+        env:
+          mode: development
+        commands:
+          - echo $(ls -A)
+          - docker build -t ${{projectName}}/data .
+          - if docker ps -a | grep -q \\b${{projectName}}\\b; then docker ps -a | grep \\b${{projectName}}\\b | awk '{print $1}' | xargs docker rm -f; fi
+          - docker run -d -p ${{port}}:80 --name ${{projectName}} ${{projectName}}/data
 ```
