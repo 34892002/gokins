@@ -167,9 +167,9 @@ stages:
         name: build
         env:
         commands:
-          - echo Hello World
+          - echo pullSuccess
       - step: build@node
-        displayName: npm-build-2
+        displayName: deploy
         name: publish
         env:
           mode: development
@@ -178,4 +178,31 @@ stages:
           - docker build -t ${{projectName}}/data .
           - if docker ps -a | grep -q \\b${{projectName}}\\b; then docker ps -a | grep \\b${{projectName}}\\b | awk '{print $1}' | xargs docker rm -f; fi
           - docker run -d -p ${{port}}:80 --name ${{projectName}} ${{projectName}}/data
+```
+
+> 使用docker挂载目录的方式来更新文件部署
+```yml
+version: 1.0
+vars:
+stages:
+  - stage:
+    displayName: build
+    name: build
+    steps:
+      - step: shell@sh
+        displayName: npm-build-1
+        name: build
+        env:
+        commands:
+          - echo pullSuccess
+      - step: build@node
+        displayName: deploy
+        name: publish
+        env:
+        commands:
+          - echo $(ls -A)
+          - docker run -d --name temp-copy -v /www/www.demo.com/index/:/data alpine tail -f /dev/null
+          - docker cp . temp-copy:/data/
+          - docker stop temp-copy
+          - docker rm temp-copy
 ```
