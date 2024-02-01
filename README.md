@@ -154,6 +154,56 @@ go build -o gokins main.go
 > 使用仓库内Dockerfile文件部署到docker，请自行了解Dockerfile
 ```yml
 version: 1.0
+vars: #不是所有地方都可以使用变量，注意参数大小写
+  host: 127.0.0.1:22
+stages:
+  - stage:
+    displayName: 构建
+    name: simple
+    steps:
+      - step: shell@sh
+        displayName: 打包
+        name: build
+        env:
+        commands:
+          - echo success!
+      - step: shell@sh
+        displayName: 生成制品
+        name: art
+        artifacts:
+          - scope: repo #repo存档不会删除、pipe流水线、var流水线变量
+            repository: ibepmjwt #制品库id
+            name: simpleHtml #制品库名称
+            path: ./dist #要打包的源码目录./dist ./public
+        commands:
+          - echo success!
+  - stage:
+    displayName: 发布
+    name: publish
+    steps:
+      - step: shell@ssh
+        displayName: 制品部署
+        name: artPublish
+        input:
+          host: ${{host}}
+          user: ${{user}}
+          pass: ${{pwd}}
+        useArtifacts:
+          - scope: repo
+            repository: ibepmjwt
+            name: simpleHtml #name: 制品库中的制品名,可以使用name@xxx获取某个版本的制品(默认使用最新)
+            alias: DIST #默认与name字段一致
+            path: dist #要下载的制品目录，一般同artifacts.path
+            isUrl: true #自动写入环境变量 $ARTIFACT_DOWNURL_${alias}
+        commands:
+          - echo $ARTIFACT_DOWNURL_DIST
+          - wget -O public.zip $ARTIFACT_DOWNURL_DIST
+          - unzip -o public.zip
+          - cp -f ./dist/* www/sites/index
+```
+> 使用仓库内Dockerfile文件部署到docker，请自行了解Dockerfile
+```yml
+version: 1.0
 vars:
   projectName: v3temp
   port: 2360
