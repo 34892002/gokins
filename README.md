@@ -151,7 +151,7 @@ $env:GOARCH="amd64"
 go build -o gokins main.go
 ```
 ## 流水线配置示例
-> 使用仓库内Dockerfile文件部署到docker，请自行了解Dockerfile
+> 使用制品部署静态网站资源到远程服务器
 ```yml
 version: 1.0
 vars: #不是所有地方都可以使用变量，注意参数大小写
@@ -201,6 +201,7 @@ stages:
           - unzip -o public.zip
           - cp -f ./dist/* www/sites/index
 ```
+
 > 使用仓库内Dockerfile文件部署到docker，请自行了解Dockerfile
 ```yml
 version: 1.0
