@@ -277,7 +277,7 @@ stages:
         commands:
           - echo $(ls -A)
           - docker build -t ${{projectName}}/data .
-          - if docker ps -a | grep -q \\b${{projectName}}\\b; then docker ps -a | grep \\b${{projectName}}\\b | awk '{print $1}' | xargs docker rm -f; fi
+          - docker rm -f ${{projectName}}
           - docker run -d -p ${{port}}:80 --name ${{projectName}} ${{projectName}}/data
 ```
 
