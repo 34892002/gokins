@@ -202,7 +202,57 @@ stages:
           - cp -f ./dist/* www/sites/index
 ```
 
-> 使用仓库内Dockerfile文件部署到docker，请自行了解Dockerfile
+> 使用私有仓库到远程服务器部署docker，需要Dockerfile请自行了解
+```yml
+version: 1.0
+vars:
+  host: 192.168.1.100:22
+  dockerHost: 192.168.1.101:5000
+  projectName: v3temp
+  projectPort: 80
+  servePort: 3210
+stages:
+  - stage:
+    displayName: 打包
+    name: build
+    steps:
+      - step: shell@sh
+        displayName: 打包流程
+        name: build
+        env:
+        commands:
+          - echo $(printenv)
+          - echo $(ls -A)
+          - docker build -t ${{projectName}}:latest .
+          - docker tag ${{projectName}}:latest ${{dockerHost}}/${{projectName}}:latest
+          - docker push ${{dockerHost}}/${{projectName}}:latest
+  - stage:
+    displayName: 发布
+    name: publish
+    steps:
+      - step: shell@ssh
+        displayName: 发布流程
+        name: publish
+        input:
+          host: ${{host}}
+          user: ${{user}}
+          pass: ${{pwd}}
+        commands:
+          - echo $(printenv)
+          - echo $(ls -A)
+          - docker pull ${{dockerHost}}/${{projectName}}:latest
+          - docker rm -f ${{projectName}}
+          - |
+            docker run -d -p ${{servePort}}:${{projectPort}} \
+            --name ${{projectName}} ${{dockerHost}}/${{projectName}}:latest
+```
+### 额外节点部署
++ 使用简单无须使用SSH、制品库、私有镜像仓库
++ 直接通过gokinsr传递git分支到节点，通过shell打包部署
++ 需要在gokinsr中配置好节点信息
++ 这里我的gokinsr运行在docker内，所以使用的都是通过docker命令操作
+
+> Dockerfile文件部署到docker
 ```yml
 version: 1.0
 vars:
@@ -231,7 +281,7 @@ stages:
           - docker run -d -p ${{port}}:80 --name ${{projectName}} ${{projectName}}/data
 ```
 
-> 使用docker挂载目录的方式来更新文件部署
+> docker挂载目录部署静态资源
 ```yml
 version: 1.0
 vars:
